@@ -1,0 +1,87 @@
+# Load required libraries
+library(forecast)
+library(ggplot2)
+library(tseries)
+library(stats)
+
+# Create the data frame
+data <- data.frame(
+  Years = seq(as.Date("2004-01-01"), as.Date("2023-01-01"), by = "years"),
+  Demand = c(134, 143, 144, 130, 135, 125, 140, 137, 143, 126, 132, 139, 136, 132, 124, 137, 128, 134, 145, 146)
+)
+
+# Convert to time series
+ts_data <- ts(data$Demand, start = c(2004, 1), frequency = 1)
+
+# Time Series Plot
+png("time_series_plot.png", width = 800, height = 600)
+plot(ts_data, main = "Time Series Plot of Demand", xlab = "Year", ylab = "Demand (£Ms)")
+dev.off()
+
+# Calculate MAE and RMSE
+mae <- mean(abs(ts_data - mean(ts_data)))
+rmse <- sqrt(mean((ts_data - mean(ts_data))^2))
+cat("Mean Absolute Error:", mae, "\n")
+cat("Root Mean Square Error:", rmse, "\n")
+
+# RMSE Graph
+png("rmse_graph.png", width = 800, height = 600)
+plot(ts_data, main = paste("Demand vs Mean (RMSE:", round(rmse, 2), ")"), xlab = "Year", ylab = "Demand (£Ms)")
+abline(h = mean(ts_data), col = "red", lty = 2)
+legend("topleft", legend = c("Actual", "Mean"), col = c("black", "red"), lty = c(1, 2))
+dev.off()
+
+# Trend and Seasonality Analysis
+decomp <- decompose(ts_data)
+png("decomposition_plot.png", width = 800, height = 800)
+plot(decomp)
+dev.off()
+
+# ACF and PACF
+png("acf_pacf_plot.png", width = 800, height = 800)
+par(mfrow = c(2, 1))
+acf(ts_data, main = "ACF")
+pacf(ts_data, main = "PACF")
+dev.off()
+
+# AIC and BIC
+aic_bic <- data.frame(p = integer(), d = integer(), q = integer(), AIC = numeric(), BIC = numeric())
+
+for (p in 0:2) {
+  for (d in 0:2) {
+    for (q in 0:2) {
+      tryCatch({
+        model <- arima(ts_data, order = c(p, d, q))
+        aic_bic <- rbind(aic_bic, data.frame(p = p, d = d, q = q, AIC = AIC(model), BIC = BIC(model)))
+      }, error = function(e) {})
+    }
+  }
+}
+
+# AIC and BIC Graph
+png("aic_bic_graph.png", width = 800, height = 600)
+ggplot(aic_bic, aes(x = 1:nrow(aic_bic))) +
+  geom_line(aes(y = AIC, color = "AIC")) +
+  geom_line(aes(y = BIC, color = "BIC")) +
+  labs(title = "AIC and BIC for different ARIMA models", x = "Model", y = "Criterion Value") +
+  theme_minimal()
+dev.off()
+
+# Find best ARIMA model
+best_model <- aic_bic[which.min(aic_bic$AIC), ]
+cat("Best model by AIC:", paste0("ARIMA(", best_model$p, ",", best_model$d, ",", best_model$q, ")"), "\n")
+
+# Fit ARIMA model and forecast
+fit <- auto.arima(ts_data)
+forecast <- forecast(fit, h = 4)
+
+# Plot forecast
+png("forecast_plot.png", width = 800, height = 600)
+plot(forecast, main = "ARIMA Forecast for Next 4 Years", xlab = "Year", ylab = "Demand (£Ms)")
+dev.off()
+
+# Print forecast values
+cat("Forecast for next 4 years:\n")
+for (i in 1:4) {
+  cat(format(as.Date("2024-01-01") + years(i-1), "%Y"), ": £", round(forecast$mean[i], 2), "M\n")
+}
