@@ -1,0 +1,38 @@
+# Time Series Analysis and ARIMA Forecasting for Demand Data
+
+This project consists of two main R scripts for analyzing and forecasting demand data using time series techniques.
+
+## File 1: Time Series Analysis and ARIMA Forecasting
+
+This script performs the following analyses:
+
+1. Data Loading and Preparation
+2. Time Series Plot
+3. MAE and RMSE Calculation
+4. RMSE Graph
+5. Trend and Seasonality Analysis
+6. ACF and PACF Analysis
+7. AIC and BIC Calculation
+8. AIC and BIC Graph
+9. Best ARIMA Model Selection
+10. ARIMA Model Fitting and Forecasting
+11. Forecast Plot
+12. Forecast Values Printing
+
+## File 2: Time Series Cross-validation
+
+This script performs time series cross-validation to assess the ARIMA model's performance.
+
+## Usage
+
+1. Ensure you have R installed along with the required libraries: forecast, ggplot2, tseries, and stats.
+2. Run the scripts in R or RStudio.
+3. The scripts will generate various plots and output files in your working directory.
+
+## Data
+
+The scripts use demand data from 2004 to 2023. Ensure your data is in the correct format before running the scripts.
+
+## Output
+
+The scripts will generate several PNG files for visualizations and print various statistics and forecasts to the console.
