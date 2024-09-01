@@ -1,0 +1,56 @@
+library(forecast)
+library(ggplot2)
+
+# Load the data
+data <- data.frame(
+  Years = seq(as.Date("2004-01-01"), as.Date("2023-01-01"), by = "years"),
+  Demand = c(134, 143, 144, 130, 135, 125, 140, 137, 143, 126, 132, 139, 136, 132, 124, 137, 128, 134, 145, 146)
+)
+
+# Convert to time series object
+ts_data <- ts(data$Demand, start = c(2004, 1), frequency = 1)
+
+# Define the ARIMA order (p,d,q)
+order <- c(1,1,1)
+
+# Perform time series cross-validation
+h <- 1  # forecast horizon
+n <- length(ts_data)
+k <- 5  # number of folds
+
+predictions <- numeric(k)
+observed <- numeric(k)
+
+for (i in 1:k) {
+  train <- ts_data[1:(n-k+i-1)]
+  test <- ts_data[n-k+i]
+  
+  model <- Arima(train, order = order)
+  forecast <- forecast(model, h = 1)
+  
+  predictions[i] <- forecast$mean[1]
+  observed[i] <- test
+  
+  cat("predicted =", predictions[i], ", expected =", observed[i], "\n")
+}
+
+# Calculate RMSE
+rmse <- sqrt(mean((observed - predictions)^2))
+cat("Test RMSE:", rmse, "\n")
+
+# Plot the results
+df_plot <- data.frame(
+  Years = tail(data$Years, 5),
+  Actual = observed,
+  Predicted = predictions
+)
+
+ggplot(df_plot, aes(x = Years)) +
+  geom_line(aes(y = Actual, color = "Actual")) +
+  geom_line(aes(y = Predicted, color = "Predicted")) +
+  labs(title = "Time Series Cross-Validation",
+       x = "Year",
+       y = "Demand (£Ms)",
+       color = "Legend") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
